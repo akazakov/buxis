@@ -1,0 +1,12 @@
+{
+  "name" : "buxis",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "7032c5759f823fc8699a5c37d5f7072464ccb9a8",
+  "dependencies" : [ {
+    "name" : "fmt",
+    "version>=" : "10.2.1"
+  }, {
+    "name" : "nanobench",
+    "version>=" : "4.3.11"
+  } ]
+}

@@ -1,0 +1,8 @@
+---
+BasedOnStyle: Google
+---
+Language: Cpp
+IndentWidth: 2
+AccessModifierOffset: 0
+IndentAccessModifiers: true
+ContinuationIndentWidth: 2

@@ -19,72 +19,159 @@ namespace flatbufs_demo {
 
 struct Node;
 
-enum NodeFlags : uint16_t {
-  NodeFlags_NaGoesRirght = 1,
-  NodeFlags_NONE = 0,
-  NodeFlags_ANY = 1
+struct Tree;
+struct TreeBuilder;
+
+enum LeafNodeFlags : uint8_t {
+  LeafNodeFlags_IsLeaf = 1,
+  LeafNodeFlags_NONE = 0,
+  LeafNodeFlags_ANY = 1
 };
 
-inline const NodeFlags (&EnumValuesNodeFlags())[1] {
-  static const NodeFlags values[] = {
-    NodeFlags_NaGoesRirght
+inline const LeafNodeFlags (&EnumValuesLeafNodeFlags())[1] {
+  static const LeafNodeFlags values[] = {
+    LeafNodeFlags_IsLeaf
   };
   return values;
 }
 
-inline const char * const *EnumNamesNodeFlags() {
+inline const char * const *EnumNamesLeafNodeFlags() {
   static const char * const names[2] = {
-    "NaGoesRirght",
+    "IsLeaf",
     nullptr
   };
   return names;
 }
 
-inline const char *EnumNameNodeFlags(NodeFlags e) {
-  if (::flatbuffers::IsOutRange(e, NodeFlags_NaGoesRirght, NodeFlags_NaGoesRirght)) return "";
-  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(NodeFlags_NaGoesRirght);
-  return EnumNamesNodeFlags()[index];
+inline const char *EnumNameLeafNodeFlags(LeafNodeFlags e) {
+  if (::flatbuffers::IsOutRange(e, LeafNodeFlags_IsLeaf, LeafNodeFlags_IsLeaf)) return "";
+  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(LeafNodeFlags_IsLeaf);
+  return EnumNamesLeafNodeFlags()[index];
+}
+
+enum InnerNodeFlags : uint8_t {
+  InnerNodeFlags_NaGoesRigth = 1,
+  InnerNodeFlags_NONE = 0,
+  InnerNodeFlags_ANY = 1
+};
+
+inline const InnerNodeFlags (&EnumValuesInnerNodeFlags())[1] {
+  static const InnerNodeFlags values[] = {
+    InnerNodeFlags_NaGoesRigth
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesInnerNodeFlags() {
+  static const char * const names[2] = {
+    "NaGoesRigth",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameInnerNodeFlags(InnerNodeFlags e) {
+  if (::flatbuffers::IsOutRange(e, InnerNodeFlags_NaGoesRigth, InnerNodeFlags_NaGoesRigth)) return "";
+  const size_t index = static_cast<size_t>(e) - static_cast<size_t>(InnerNodeFlags_NaGoesRigth);
+  return EnumNamesInnerNodeFlags()[index];
 }
 
 FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Node FLATBUFFERS_FINAL_CLASS {
  private:
   double value_;
-  uint64_t feature_;
+  uint16_t feature_;
   uint16_t left_child_offset_;
-  uint16_t node_flags_;
-  int32_t padding0__;
+  uint8_t loaf_node_flags_;
+  uint8_t inner_node_flags_;
+  int16_t padding0__;
 
  public:
   Node()
       : value_(0),
         feature_(0),
         left_child_offset_(0),
-        node_flags_(0),
+        loaf_node_flags_(0),
+        inner_node_flags_(0),
         padding0__(0) {
     (void)padding0__;
   }
-  Node(double _value, uint64_t _feature, uint16_t _left_child_offset, kazakov::buxis::flatbufs_demo::NodeFlags _node_flags)
+  Node(double _value, uint16_t _feature, uint16_t _left_child_offset, uint8_t _loaf_node_flags, uint8_t _inner_node_flags)
       : value_(::flatbuffers::EndianScalar(_value)),
         feature_(::flatbuffers::EndianScalar(_feature)),
         left_child_offset_(::flatbuffers::EndianScalar(_left_child_offset)),
-        node_flags_(::flatbuffers::EndianScalar(static_cast<uint16_t>(_node_flags))),
+        loaf_node_flags_(::flatbuffers::EndianScalar(_loaf_node_flags)),
+        inner_node_flags_(::flatbuffers::EndianScalar(_inner_node_flags)),
         padding0__(0) {
     (void)padding0__;
   }
   double value() const {
     return ::flatbuffers::EndianScalar(value_);
   }
-  uint64_t feature() const {
+  uint16_t feature() const {
     return ::flatbuffers::EndianScalar(feature_);
   }
   uint16_t left_child_offset() const {
     return ::flatbuffers::EndianScalar(left_child_offset_);
   }
-  kazakov::buxis::flatbufs_demo::NodeFlags node_flags() const {
-    return static_cast<kazakov::buxis::flatbufs_demo::NodeFlags>(::flatbuffers::EndianScalar(node_flags_));
+  uint8_t loaf_node_flags() const {
+    return ::flatbuffers::EndianScalar(loaf_node_flags_);
+  }
+  uint8_t inner_node_flags() const {
+    return ::flatbuffers::EndianScalar(inner_node_flags_);
   }
 };
-FLATBUFFERS_STRUCT_END(Node, 24);
+FLATBUFFERS_STRUCT_END(Node, 16);
+
+struct Tree FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef TreeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NODES = 4
+  };
+  const ::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *> *nodes() const {
+    return GetPointer<const ::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *> *>(VT_NODES);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NODES) &&
+           verifier.VerifyVector(nodes()) &&
+           verifier.EndTable();
+  }
+};
+
+struct TreeBuilder {
+  typedef Tree Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_nodes(::flatbuffers::Offset<::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *>> nodes) {
+    fbb_.AddOffset(Tree::VT_NODES, nodes);
+  }
+  explicit TreeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Tree> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Tree>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Tree> CreateTree(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *>> nodes = 0) {
+  TreeBuilder builder_(_fbb);
+  builder_.add_nodes(nodes);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Tree> CreateTreeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<kazakov::buxis::flatbufs_demo::Node> *nodes = nullptr) {
+  auto nodes__ = nodes ? _fbb.CreateVectorOfStructs<kazakov::buxis::flatbufs_demo::Node>(*nodes) : 0;
+  return kazakov::buxis::flatbufs_demo::CreateTree(
+      _fbb,
+      nodes__);
+}
 
 }  // namespace flatbufs_demo
 }  // namespace buxis

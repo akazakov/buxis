@@ -6,6 +6,10 @@ message(STATUS Project: ${ProjectId})
 
 # Global packages that used everywhere
 find_package(nanobench REQUIRED CONFIG)
+find_package(flatbuffers CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+link_libraries(fmt::fmt-header-only)
+
 #set(CMAKE_CXX_FLAGS_DEBUG -O)
 
 
@@ -17,3 +21,4 @@ set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(func_call_performance)
+add_subdirectory(flatbufs_demo)

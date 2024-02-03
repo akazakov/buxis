@@ -8,5 +8,8 @@
   }, {
     "name" : "nanobench",
     "version>=" : "4.3.11"
+  }, {
+    "name" : "flatbuffers",
+    "version>=" : "23.5.26#1"
   } ]
 }

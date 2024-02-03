@@ -1,0 +1,16 @@
+namespace kazakov.buxis.flatbufs_demo;
+
+enum NodeFlags : uint16 (bit_flags) {
+    NaGoesRirght, // 0 - left, 1 - right
+}
+
+struct Node {
+    // Split value for internal nodes, perdiction value for leafs
+    value: float64;
+    feature: uint64;
+    // id is implicit
+    // We only need to keep a single pointer, as we always store 2 children nodes next to each other.
+    left_child_offset: uint16;
+    // right child = left_child_offset + 1
+    node_flags: NodeFlags;
+}

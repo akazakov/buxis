@@ -22,6 +22,12 @@ struct Node;
 struct Tree;
 struct TreeBuilder;
 
+struct TrainingData;
+struct TrainingDataBuilder;
+
+struct Ensemble;
+struct EnsembleBuilder;
+
 enum LeafNodeFlags : uint8_t {
   LeafNodeFlags_IsLeaf = 1,
   LeafNodeFlags_NONE = 0,
@@ -125,15 +131,21 @@ FLATBUFFERS_STRUCT_END(Node, 16);
 struct Tree FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef TreeBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_NODES = 4
+    VT_NODES = 4,
+    VT_DEPTH = 6
   };
   const ::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *> *nodes() const {
     return GetPointer<const ::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *> *>(VT_NODES);
+  }
+  const ::flatbuffers::Vector<uint16_t> *depth() const {
+    return GetPointer<const ::flatbuffers::Vector<uint16_t> *>(VT_DEPTH);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NODES) &&
            verifier.VerifyVector(nodes()) &&
+           VerifyOffset(verifier, VT_DEPTH) &&
+           verifier.VerifyVector(depth()) &&
            verifier.EndTable();
   }
 };
@@ -144,6 +156,9 @@ struct TreeBuilder {
   ::flatbuffers::uoffset_t start_;
   void add_nodes(::flatbuffers::Offset<::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *>> nodes) {
     fbb_.AddOffset(Tree::VT_NODES, nodes);
+  }
+  void add_depth(::flatbuffers::Offset<::flatbuffers::Vector<uint16_t>> depth) {
+    fbb_.AddOffset(Tree::VT_DEPTH, depth);
   }
   explicit TreeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -158,19 +173,148 @@ struct TreeBuilder {
 
 inline ::flatbuffers::Offset<Tree> CreateTree(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *>> nodes = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<const kazakov::buxis::flatbufs_demo::Node *>> nodes = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint16_t>> depth = 0) {
   TreeBuilder builder_(_fbb);
+  builder_.add_depth(depth);
   builder_.add_nodes(nodes);
   return builder_.Finish();
 }
 
 inline ::flatbuffers::Offset<Tree> CreateTreeDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<kazakov::buxis::flatbufs_demo::Node> *nodes = nullptr) {
+    const std::vector<kazakov::buxis::flatbufs_demo::Node> *nodes = nullptr,
+    const std::vector<uint16_t> *depth = nullptr) {
   auto nodes__ = nodes ? _fbb.CreateVectorOfStructs<kazakov::buxis::flatbufs_demo::Node>(*nodes) : 0;
+  auto depth__ = depth ? _fbb.CreateVector<uint16_t>(*depth) : 0;
   return kazakov::buxis::flatbufs_demo::CreateTree(
       _fbb,
-      nodes__);
+      nodes__,
+      depth__);
+}
+
+struct TrainingData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef TrainingDataBuilder Builder;
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           verifier.EndTable();
+  }
+};
+
+struct TrainingDataBuilder {
+  typedef TrainingData Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  explicit TrainingDataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<TrainingData> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<TrainingData>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<TrainingData> CreateTrainingData(
+    ::flatbuffers::FlatBufferBuilder &_fbb) {
+  TrainingDataBuilder builder_(_fbb);
+  return builder_.Finish();
+}
+
+struct Ensemble FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef EnsembleBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TREES = 4,
+    VT_TRAINING_DATA = 6
+  };
+  const ::flatbuffers::Vector<::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Tree>> *trees() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Tree>> *>(VT_TREES);
+  }
+  const kazakov::buxis::flatbufs_demo::TrainingData *training_data() const {
+    return GetPointer<const kazakov::buxis::flatbufs_demo::TrainingData *>(VT_TRAINING_DATA);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_TREES) &&
+           verifier.VerifyVector(trees()) &&
+           verifier.VerifyVectorOfTables(trees()) &&
+           VerifyOffset(verifier, VT_TRAINING_DATA) &&
+           verifier.VerifyTable(training_data()) &&
+           verifier.EndTable();
+  }
+};
+
+struct EnsembleBuilder {
+  typedef Ensemble Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_trees(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Tree>>> trees) {
+    fbb_.AddOffset(Ensemble::VT_TREES, trees);
+  }
+  void add_training_data(::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::TrainingData> training_data) {
+    fbb_.AddOffset(Ensemble::VT_TRAINING_DATA, training_data);
+  }
+  explicit EnsembleBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Ensemble> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Ensemble>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Ensemble> CreateEnsemble(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Tree>>> trees = 0,
+    ::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::TrainingData> training_data = 0) {
+  EnsembleBuilder builder_(_fbb);
+  builder_.add_training_data(training_data);
+  builder_.add_trees(trees);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Ensemble> CreateEnsembleDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const std::vector<::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Tree>> *trees = nullptr,
+    ::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::TrainingData> training_data = 0) {
+  auto trees__ = trees ? _fbb.CreateVector<::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Tree>>(*trees) : 0;
+  return kazakov::buxis::flatbufs_demo::CreateEnsemble(
+      _fbb,
+      trees__,
+      training_data);
+}
+
+inline const kazakov::buxis::flatbufs_demo::Ensemble *GetEnsemble(const void *buf) {
+  return ::flatbuffers::GetRoot<kazakov::buxis::flatbufs_demo::Ensemble>(buf);
+}
+
+inline const kazakov::buxis::flatbufs_demo::Ensemble *GetSizePrefixedEnsemble(const void *buf) {
+  return ::flatbuffers::GetSizePrefixedRoot<kazakov::buxis::flatbufs_demo::Ensemble>(buf);
+}
+
+inline bool VerifyEnsembleBuffer(
+    ::flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<kazakov::buxis::flatbufs_demo::Ensemble>(nullptr);
+}
+
+inline bool VerifySizePrefixedEnsembleBuffer(
+    ::flatbuffers::Verifier &verifier) {
+  return verifier.VerifySizePrefixedBuffer<kazakov::buxis::flatbufs_demo::Ensemble>(nullptr);
+}
+
+inline void FinishEnsembleBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Ensemble> root) {
+  fbb.Finish(root);
+}
+
+inline void FinishSizePrefixedEnsembleBuffer(
+    ::flatbuffers::FlatBufferBuilder &fbb,
+    ::flatbuffers::Offset<kazakov::buxis::flatbufs_demo::Ensemble> root) {
+  fbb.FinishSizePrefixed(root);
 }
 
 }  // namespace flatbufs_demo

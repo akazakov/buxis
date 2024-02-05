@@ -24,4 +24,14 @@ struct Node {
 
 table Tree {
     nodes: [Node];
+    depth: [uint16];
 }
+
+table TrainingData {}
+
+table Ensemble {
+    trees: [Tree];
+    training_data: TrainingData;
+}
+
+root_type Ensemble;

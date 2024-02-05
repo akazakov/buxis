@@ -7,5 +7,5 @@ set(flatbufs_demo_SRC
 )
 
 add_executable(flatbufs_demo ${flatbufs_demo_SRC})
-target_link_libraries(flatbufs_demo flatbuffers::flatbuffers)
+target_link_libraries(flatbufs_demo flatbuffers::flatbuffers nanobench::nanobench)
 project(${ProjectId})

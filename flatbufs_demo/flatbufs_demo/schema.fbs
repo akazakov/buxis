@@ -18,7 +18,7 @@ struct Node {
     // We only need to keep a single pointer, as we always store 2 children nodes next to each other.
     left_child_offset: uint16;
     // right child = left_child_offset + 1
-    loaf_node_flags: uint8; // must be 0 for inner nodes
+    leaf_node_flags: uint8; // must be 0 for inner nodes
     inner_node_flags: uint8;
 }
 

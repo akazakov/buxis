@@ -87,7 +87,7 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Node FLATBUFFERS_FINAL_CLASS {
   double value_;
   uint16_t feature_;
   uint16_t left_child_offset_;
-  uint8_t loaf_node_flags_;
+  uint8_t leaf_node_flags_;
   uint8_t inner_node_flags_;
   int16_t padding0__;
 
@@ -96,16 +96,16 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Node FLATBUFFERS_FINAL_CLASS {
       : value_(0),
         feature_(0),
         left_child_offset_(0),
-        loaf_node_flags_(0),
+        leaf_node_flags_(0),
         inner_node_flags_(0),
         padding0__(0) {
     (void)padding0__;
   }
-  Node(double _value, uint16_t _feature, uint16_t _left_child_offset, uint8_t _loaf_node_flags, uint8_t _inner_node_flags)
+  Node(double _value, uint16_t _feature, uint16_t _left_child_offset, uint8_t _leaf_node_flags, uint8_t _inner_node_flags)
       : value_(::flatbuffers::EndianScalar(_value)),
         feature_(::flatbuffers::EndianScalar(_feature)),
         left_child_offset_(::flatbuffers::EndianScalar(_left_child_offset)),
-        loaf_node_flags_(::flatbuffers::EndianScalar(_loaf_node_flags)),
+        leaf_node_flags_(::flatbuffers::EndianScalar(_leaf_node_flags)),
         inner_node_flags_(::flatbuffers::EndianScalar(_inner_node_flags)),
         padding0__(0) {
     (void)padding0__;
@@ -119,8 +119,8 @@ FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(8) Node FLATBUFFERS_FINAL_CLASS {
   uint16_t left_child_offset() const {
     return ::flatbuffers::EndianScalar(left_child_offset_);
   }
-  uint8_t loaf_node_flags() const {
-    return ::flatbuffers::EndianScalar(loaf_node_flags_);
+  uint8_t leaf_node_flags() const {
+    return ::flatbuffers::EndianScalar(leaf_node_flags_);
   }
   uint8_t inner_node_flags() const {
     return ::flatbuffers::EndianScalar(inner_node_flags_);

@@ -12,8 +12,16 @@ struct NativeNode {
     uint16_t left_child_offset;
     uint8_t leaf_node_flags;
     uint8_t inner_node_flags;
+    int16_t padding0__;
 };
 
+void FlatbufPredict(const std::vector<double>& test_v,
+                    unsigned int num_trees,
+                    const std::vector<const Node*>& node_starts,
+                    double& prediction2);
+void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
+                   const std::vector<double>& test_v,
+                   double& prediction1);
 int main() {
   size_t kNumTrees = 1000;
   size_t kNumFeatures = 1000;
@@ -40,7 +48,7 @@ int main() {
       NativeNode{.value = nodes[0].value(),
                  .feature = nodes[0].feature(),
                  .left_child_offset = nodes[0].left_child_offset(),
-                 .leaf_node_flags = nodes[0].loaf_node_flags(),
+                 .leaf_node_flags = nodes[0].leaf_node_flags(),
                  .inner_node_flags = nodes[0].inner_node_flags()});
 
     for (int j = 1; j < kNumNodesPerTree; j++) {
@@ -50,7 +58,7 @@ int main() {
         NativeNode{.value = nodes[j].value(),
                    .feature = nodes[j].feature(),
                    .left_child_offset = nodes[j].left_child_offset(),
-                   .leaf_node_flags = nodes[j].loaf_node_flags(),
+                   .leaf_node_flags = nodes[j].leaf_node_flags(),
                    .inner_node_flags = nodes[j].inner_node_flags()});
     }
 
@@ -73,7 +81,11 @@ int main() {
   fmt::println("Ensemble trees size: {}", trees_d->size());
   const Tree* tree1 = trees_d->Get(0);
   fmt::println("Tree[0] size: {}", tree1->nodes()->size());
-  auto bench = ankerl::nanobench::Bench().minEpochIterations(1000);
+  auto bench = ankerl::nanobench::Bench()
+                 .epochIterations(1000)
+                 .epochs(10)
+                 .relative(true)
+                 .warmup(10);
 
   auto test_v = std::vector<double>(kNumFeatures);
   for (auto& item : test_v) {
@@ -81,40 +93,83 @@ int main() {
   }
 
   double prediction1 = 0;
-  bench.run("native", [&] {
-    for (auto& tree : native_trees) {
-      auto current_node = tree[0];
-      while (!current_node.leaf_node_flags) {
-        uint16_t child_ofs =
-          test_v[current_node.feature] < current_node.value ? 0 : 1;
-        current_node = tree[current_node.left_child_offset + child_ofs];
-      }
-      prediction1 += current_node.value;
+  for (auto& tree : native_trees) {
+    auto current_node = tree[0];
+    while (!current_node.leaf_node_flags) {
+      uint16_t child_ofs =
+        test_v[current_node.feature] < current_node.value ? 0 : 1;
+      current_node = tree[current_node.left_child_offset + child_ofs];
     }
+    prediction1 += current_node.value;
+  }
 
+  double prediction2 = 0;
+  auto num_trees = ensemble->trees()->size();
+  auto trees_table = ensemble->trees();
+  for (int i = 0; i < num_trees; i++) {
+    auto current_tree = trees_table->Get(i);
+    auto current_tree_nodes = reinterpret_cast<const Node*>(
+      current_tree->nodes()->GetStructFromOffset(0));
+    auto current_node = &current_tree_nodes[0];
+    while (!current_node->leaf_node_flags()) {
+      uint16_t child_ofs =
+        test_v[current_node->feature()] < current_node->value() ? 0 : 1;
+      current_node =
+        &current_tree_nodes[current_node->left_child_offset() + child_ofs];
+    }
+    prediction2 += current_node->value();
+  }
+  fmt::println("R1: {}", prediction1);
+  fmt::println("R2: {}", prediction2);
+
+  auto tree = native_trees[0];
+  bench.run("native", [&] {
+    NativePredict(native_trees, test_v, prediction1);
     return prediction1;
   });
 
-  double prediction2 = 0;
+  std::vector<const Node*> node_starts(num_trees);
+  for (int i = 0; i < num_trees; i++) {
+    auto current_tree = trees_table->Get(i);
+    auto current_tree_nodes = reinterpret_cast<const Node*>(
+      current_tree->nodes()->GetStructFromOffset(0));
+    node_starts[i] = current_tree_nodes;
+  }
+
   bench.run("flatbuf", [&] {
-    auto numTrees = ensemble->trees()->size();
-    auto trees_table = ensemble->trees();
-    for (int i = 0; i < numTrees; i++) {
-      auto current_tree = trees_table->Get(i);
-      auto current_tree_nodes = current_tree->nodes();
-      auto current_node = current_tree_nodes->Get(0);
-      while (!current_node->loaf_node_flags()) {
-        uint16_t child_ofs =
-          test_v[current_node->feature()] < current_node->value() ? 0 : 1;
-        current_node = current_tree_nodes->Get(
-          current_node->left_child_offset() + child_ofs);
-      }
-      prediction2 += current_node->value();
-    }
+    FlatbufPredict(test_v, num_trees, node_starts, prediction2);
     return prediction2;
   });
   fmt::println("R1: {}", prediction1);
   fmt::println("R2: {}", prediction2);
 
   return 0;
+}
+
+void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
+                   const std::vector<double>& test_v, double& prediction1) {
+  for (auto& tree : native_trees) {
+    auto current_node = &tree[0];
+    while (!current_node->leaf_node_flags) {
+      uint16_t child_ofs =
+        test_v[current_node->feature] < current_node->value ? 0 : 1;
+      current_node = &tree[current_node->left_child_offset + child_ofs];
+    }
+    prediction1 += current_node->value;
+  }
+}
+
+void FlatbufPredict(const std::vector<double>& test_v, unsigned int num_trees,
+                    const std::vector<const Node*>& node_starts,
+                    double& prediction2) {
+  for (int i = 0; i < num_trees; i++) {
+    auto current_node = node_starts[i];
+    while (!current_node->leaf_node_flags()) {
+      uint16_t child_ofs =
+        test_v[current_node->feature()] < current_node->value() ? 0 : 1;
+      current_node =
+        &node_starts[i][current_node->left_child_offset() + child_ofs];
+    }
+    prediction2 += current_node->value();
+  }
 }

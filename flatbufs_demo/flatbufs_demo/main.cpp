@@ -1,6 +1,8 @@
 #include <fmt/format-inl.h>
 #include <nanobench.h>
 
+#include <iostream>
+#include <iprof/iprof.hpp>
 #include <random>
 
 #include "schema_generated.h"
@@ -15,13 +17,11 @@ struct NativeNode {
     int16_t padding0__;
 };
 
-void FlatbufPredict(const std::vector<double>& test_v,
-                    unsigned int num_trees,
+void FlatbufPredict(const std::vector<double>& test_v, unsigned int num_trees,
                     const std::vector<const Node*>& node_starts,
                     double& prediction2);
 void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
-                   const std::vector<double>& test_v,
-                   double& prediction1);
+                   const std::vector<double>& test_v, double& prediction1);
 int main() {
   size_t kNumTrees = 1000;
   size_t kNumFeatures = 1000;
@@ -143,11 +143,15 @@ int main() {
   fmt::println("R1: {}", prediction1);
   fmt::println("R2: {}", prediction2);
 
+  InternalProfiler::aggregateEntries();
+  std::cout << "\nThe profiler stats after the second run:\n"
+            << InternalProfiler::stats << std::endl;
   return 0;
 }
 
 void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
                    const std::vector<double>& test_v, double& prediction1) {
+  IPROF_FUNC;
   for (auto& tree : native_trees) {
     auto current_node = &tree[0];
     while (!current_node->leaf_node_flags) {
@@ -162,6 +166,7 @@ void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
 void FlatbufPredict(const std::vector<double>& test_v, unsigned int num_trees,
                     const std::vector<const Node*>& node_starts,
                     double& prediction2) {
+  IPROF_FUNC;
   for (int i = 0; i < num_trees; i++) {
     auto current_node = node_starts[i];
     while (!current_node->leaf_node_flags()) {

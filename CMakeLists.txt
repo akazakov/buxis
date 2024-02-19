@@ -9,6 +9,7 @@ find_package(nanobench REQUIRED CONFIG)
 find_package(flatbuffers CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 link_libraries(fmt::fmt-header-only)
+include_directories(./iprof/)
 
 #set(CMAKE_CXX_FLAGS_DEBUG -O)
 
@@ -22,3 +23,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(func_call_performance)
 add_subdirectory(flatbufs_demo)
+add_subdirectory(iprof)

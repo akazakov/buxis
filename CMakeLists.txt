@@ -3,6 +3,7 @@ get_filename_component(ProjectId ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 string(REPLACE " " "_" ProjectId ${ProjectId})
 project(${ProjectId} CXX)
 message(STATUS Project: ${ProjectId})
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -pg)
 
 # Global packages that used everywhere
 find_package(nanobench REQUIRED CONFIG)

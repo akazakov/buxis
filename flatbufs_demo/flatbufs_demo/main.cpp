@@ -149,6 +149,7 @@ int main() {
   return 0;
 }
 
+[[gnu::noinline]]
 void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
                    const std::vector<double>& test_v, double& prediction1) {
   IPROF_FUNC;
@@ -163,6 +164,7 @@ void NativePredict(const std::vector<std::vector<NativeNode>>& native_trees,
   }
 }
 
+[[gnu::noinline]]
 void FlatbufPredict(const std::vector<double>& test_v, unsigned int num_trees,
                     const std::vector<const Node*>& node_starts,
                     double& prediction2) {

@@ -21,7 +21,12 @@ set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 
 set(CMAKE_VERBOSE_MAKEFILE ON CACHE BOOL "ON" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_FLAGS -fopenmp)
 
-add_subdirectory(func_call_performance)
+include_directories("-I/opt/homebrew/opt/libomp/include")
+link_directories("/opt/homebrew/opt/libomp/lib")
+
 add_subdirectory(flatbufs_demo)
+add_subdirectory(func_call_performance)
 add_subdirectory(iprof)
+add_subdirectory(work_cache_size)
